@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsSystemMonitorDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.IotsSystemMonitorEntity" id="iotsSystemMonitorMap">
+        <result property="id" column="id"/>
+        <result property="systemId" column="system_id"/>
+        <result property="systemIp" column="system_ip"/>
+        <result property="totalmemory" column="totalMemory"/>
+        <result property="usedMemory" column="used_Memory"/>
+        <result property="cpuLength" column="cpu_Length"/>
+        <result property="cpuId" column="cpu_id"/>
+        <result property="cpuUsed" column="cpu_Used"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    
+    <resultMap id="selectIoserverAndEqipmentByPageAndNameMap" type="io.renren.modules.iots.entity.IotsIoserverInfoEntity">
+            <result column="iid" property="id"></result>
+            <result column="iname" property="name"></result>
+            <collection property="list" ofType="io.renren.modules.iots.entity.IotsEquipmentInfoEntity">
+                <result column="eid" property="id"></result>
+                <result column="ename" property="name"></result>
+            </collection>
+    </resultMap>
+    
+    <select id="selectIoserverAndEqipmentByPageAndName" resultMap="selectIoserverAndEqipmentByPageAndNameMap">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+
+        select o.*,e.id as eid,e.`name` as ename
+        from
+        (select distinct t.id as iid, t.name as iname from iots_ioserver_info t
+        left join iots_equipment_info iot on t.id = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where t.`name` like #{parden1} and iot.name like #{parden2} and t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 limit #{currentPage},#{pageSize}) o
+        left join iots_equipment_info e on o.iid = e.pid
+        left join iots_variable_info vari on e.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where e.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 and e.isdel = 0 and e.`name` like #{parden2}
+    </select>
+    <select id="selectCountIoserverAndEqipmentByPageAndName" resultType="Integer">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select count(1) from
+        (select distinct o.*
+        from
+        (select DISTINCT t.id as iid, t.name as iname from iots_ioserver_info t
+        left join iots_equipment_info iot on t.id = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where t.`name` like #{parden1} and iot.name like #{parden2} and t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 ) o
+        left join iots_equipment_info e on o.iid = e.pid where e.isdel = 0 and e.`name` like #{parden2}) m
+
+
+    </select>
+
+    <select id="selectVariableByEquiId" resultType="io.renren.modules.iots.entity.IotsVariableInfoEntity">
+        select v.id, v.name
+        from iots_variable_info v , model_bind_relation b
+        where v.pid = #{id} and v.id = b.web_id and v.isdel = 0 and b.isFlag = 0;
+    </select>
+
+    <!-- 没有查询条件的 -->
+    <select id="selectIoserverAndEqipment" resultMap="selectIoserverAndEqipmentByPageAndNameMap">
+        select o.*,e.id as eid,e.`name` as ename from
+        (select DISTINCT  t.id as iid, t.name as iname from iots_ioserver_info t
+        left join iots_equipment_info iot on t.id = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id  where t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0
+        <if test="currentPage != null and pageSize != null">
+            limit #{currentPage},#{pageSize}
+        </if>
+        ) o
+        left join iots_equipment_info e on o.iid = e.pid
+        left join iots_variable_info vari on e.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where e.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 and e.isdel = 0
+    </select>
+
+    <select id="selectCountIoserverAndEqipment" resultType="Integer">
+        select count(1) from
+				(select DISTINCT  t.id as iid, t.name as iname from iots_ioserver_info t
+				left join iots_equipment_info iot on t.id = iot.pid
+				left join iots_variable_info vari on iot.id = vari.pid
+				left join model_bind_relation re on vari.id = re.web_id  where t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 )o
+    </select>
+
+    <!-- ioserver有参数, 设备没有参数 -->
+    <select id="selectIoserverAndEqipmentByIoserverName" resultMap="selectIoserverAndEqipmentByPageAndNameMap">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        select o.*,e.id as eid,e.`name` as ename from
+                (select DISTINCT t.id as iid, t.name as iname from iots_ioserver_info t
+                left join iots_equipment_info iot on t.id = iot.pid
+                left join iots_variable_info vari on iot.id = vari.pid
+                left join model_bind_relation re on vari.id = re.web_id
+                where t.`name` like #{parden1} and t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 limit #{currentPage},#{pageSize}) o
+                left join iots_equipment_info e on o.iid = e.pid
+                left join iots_variable_info vari on e.id = vari.pid
+                left join model_bind_relation re on vari.id = re.web_id
+                where e.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 and e.isdel = 0
+    </select>
+    <select id="selectCountIoserverAndEqipmentByIoserverName" resultType="Integer">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        select count(1)
+        from
+        (select DISTINCT t.id as iid, t.name as iname from iots_ioserver_info t
+        left join iots_equipment_info iot on t.id = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where t.`name` like #{parden1} and t.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0) o
+    </select>
+
+    <!-- ioserver 没有参数 设备有参数 -->
+    <select id="selectIoserverAndEqipmentByEqipmentName" resultMap="selectIoserverAndEqipmentByPageAndNameMap">
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select m.*,e.id as eid,e.`name` as ename from
+        (select distinct o.* from
+        (select distinct t.id as iid,t.is_del, t.name as iname from iots_equipment_info e  left join iots_ioserver_info t on t.id = e.pid where e.isdel = 0 and e.`name` like #{parden2}) o
+        left join iots_equipment_info iot on o.iid = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where o.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0
+            <if test="currentPage != null and pageSize != null">
+                limit #{currentPage},#{pageSize}
+            </if>
+        ) m
+        left join iots_equipment_info e on m.iid = e.pid
+        left join iots_variable_info vari on e.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where e.isdel = 0 and vari.isdel = 0 and re.isFlag = 0 and e.isdel = 0 and e.`name` like #{parden2}
+    </select>
+    <select id="selectCountIoserverAndEqipmentByEqipmentName" resultType="Integer">
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select count(1) from (
+        select DISTINCT iid from
+        (select distinct t.id as iid,t.is_del, t.name as iname from iots_equipment_info e  left join iots_ioserver_info t on t.id = e.pid where e.isdel = 0 and e.`name` like #{parden2}) o
+        left join iots_equipment_info iot on o.iid = iot.pid
+        left join iots_variable_info vari on iot.id = vari.pid
+        left join model_bind_relation re on vari.id = re.web_id
+        where o.is_del = 0 and iot.isdel = 0 and vari.isdel = 0 and re.isFlag = 0) y
+    </select>
+
+    <!-- 查询所有的设备名字 -->
+    <select id="queryAllEquipmentName" resultType="String">
+        select t.name from iots_equipment_info t where t.isdel = 0
+    </select>
+
+
+    <!-- 查询模型的设备和变量 -->
+    <resultMap id="selectModelAndEqipmentByPageAndNameMap" type="io.renren.modules.model.entity.ModelGroupInfoEntity">
+        <result column="iid" property="id"></result>
+        <result column="iname" property="name"></result>
+        <collection property="list" ofType="io.renren.modules.model.entity.ModelEquipmentInfoEntity">
+            <result column="eid" property="id"></result>
+            <result column="ename" property="name"></result>
+        </collection>
+    </resultMap>
+
+    <!-- 分组和设备查询条件都存在 -->
+    <select id="selectModelAndEqipmentByPageAndName" resultMap="selectModelAndEqipmentByPageAndNameMap">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select DISTINCT o.*,e.dync_id as eid,e.`name` as ename
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+        left join model_equipment_info equ on equ .pid = t.dync_id
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.`name` like #{parden1} and t.is_del = 0 and t.enable =1 limit #{currentPage},#{pageSize}) o
+        left join model_equipment_info e on o.iid = e.pid
+        left join model_variable_info vari on e.dync_id = vari.pid
+        left join model_bind_relation re on vari.dync_id = re.model_id
+        where e.isdel = 0 and e.`name` like #{parden2} and vari.isdel = 0 and re.isFlag = 0
+    </select>
+    <select id="selectCountModelAndEqipmentByPageAndName" resultType="Integer">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select count(1) from
+        (select DISTINCT o.*
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+        left join model_equipment_info equ on equ .pid = t.dync_id
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.`name` like #{parden1} and t.is_del = 0 and t.enable =1) o
+        left join model_equipment_info e on o.iid = e.pid where e.isdel = 0 and e.`name` like #{parden2}) y
+    </select>
+
+    <!-- 根据 设备ID查询所有绑定的变量 -->
+    <select id="selectModelVariableByEquiId" resultType="io.renren.modules.model.entity.ModelVariableInfoEntity">
+        select v.dync_id, v.name
+        from model_variable_info v , model_bind_relation b
+        where v.pid = #{id} and v.dync_id = b.model_id and v.isdel = 0 and b.isFlag = 0;
+    </select>
+
+    <!-- 没有条件的模型分页 -->
+    <select id="selectModelAndEqipment" resultMap="selectModelAndEqipmentByPageAndNameMap">
+        select DISTINCT o.*,e.dync_id as eid,e.`name` as ename
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+        left join model_equipment_info equ on equ .pid = t.dync_id
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.is_del = 0
+        <if test="currentPage != null and pageSize != null">
+            limit #{currentPage},#{pageSize}
+        </if>
+        ) o
+        left join model_equipment_info e on o.iid = e.pid
+        left join model_variable_info vari on e.dync_id = vari.pid
+        left join model_bind_relation re on vari.dync_id = re.model_id
+        where e.isdel = 0  and vari.isdel = 0 and re.isFlag = 0
+
+    </select>
+
+    <select id="selectCountModelAndEqipment" resultType="Integer">
+        select count(1)
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+				left join model_equipment_info equ on equ .pid = t.dync_id
+					left join model_variable_info info on info.pid = equ.dync_id
+					left join model_bind_relation bind on info.dync_id = bind.model_id
+      where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.is_del = 0) o
+    </select>
+
+    <!-- 模型分组有参数, 设备没有参数 -->
+    <select id="selectModelAndEqipmentByIoserverName" resultMap="selectModelAndEqipmentByPageAndNameMap">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        select DISTINCT o.*,e.dync_id as eid,e.`name` as ename
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+        left join model_equipment_info equ on equ .pid = t.dync_id
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.`name` like #{parden1} and t.is_del = 0 limit #{currentPage},#{pageSize}) o
+        left join model_equipment_info e on o.iid = e.pid
+        left join model_variable_info vari on e.dync_id = vari.pid
+        left join model_bind_relation re on vari.dync_id = re.model_id
+        where e.isdel = 0  and vari.isdel = 0 and re.isFlag = 0
+    </select>
+    <select id="selectCountModelAndEqipmentByIoserverName" resultType="Integer">
+        <bind name="parden1" value="'%' + ioserverName + '%'"/>
+        select count(1)
+        from
+        (select DISTINCT t.dync_id as iid, t.name as iname from model_group_info t
+        left join model_equipment_info equ on equ .pid = t.dync_id
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0 and t.`name` like #{parden1} and t.is_del = 0) o
+    </select>
+
+    <!-- model 没有参数 设备有参数 -->
+    <select id="selectModelAndEqipmentByEqipmentName" resultMap="selectModelAndEqipmentByPageAndNameMap">
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select m.*,e.dync_id as eid,e.`name` as ename from
+        (select DISTINCT o.* from
+        (select distinct t.dync_id as iid, t.name as iname from model_equipment_info e  left join model_group_info t on t.dync_id = e.pid where e.isdel = 0 and e.`name` like #{parden2}) o
+        left join model_equipment_info equ on equ .pid = o.iid
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0
+        <if test="currentPage != null and pageSize != null">
+            limit #{currentPage},#{pageSize}
+        </if>
+        ) m
+        left join model_equipment_info e on m.iid = e.pid where e.isdel = 0 and e.`name` like #{parden2} ;
+        left join model_variable_info vari on e.dync_id = vari.pid
+        left join model_bind_relation re on vari.dync_id = re.model_id
+        where e.isdel = 0 and e.`name` like #{parden2} and vari.isdel = 0 and re.isFlag = 0
+
+    </select>
+    <select id="selectCountModelAndEqipmentByEqipmentName" resultType="Integer">
+        <bind name="parden2" value="'%' + equipmentName + '%'"/>
+        select count(1) from
+        (select DISTINCT iid from
+        (select distinct t.dync_id as iid, t.name as iname from model_equipment_info e  left join model_group_info t on t.dync_id = e.pid where e.isdel = 0 and e.`name` like #{parden2}) o
+        left join model_equipment_info equ on equ .pid = o.iid
+        left join model_variable_info info on info.pid = equ.dync_id
+        left join model_bind_relation bind on info.dync_id = bind.model_id
+        where equ.isdel = 0 and info.isdel = 0 and bind.isFlag = 0) m
+    </select>
+    
+    <select id="selectPNamesByChildId" resultType="io.renren.modules.iots.entity.monitor.ChildAndParent">
+        select t.pid as id, t.name from model_group_info t where t.dync_id = #{id} and t.is_del = 0
+    </select>
+    
+    <select id="queryModelAllEquipmentName" resultType="String">
+        select t.name from model_equipment_info t where t.isdel = 0
+    </select>
+    
+    <select id="selectBindVarIdByMidelVarId" resultType="Long">
+          select t.web_id from model_bind_relation t
+		      left join iots_variable_info o on t.web_id = o.id
+              where t.model_id = #{dyncId} and t.isFlag = 0 and o.isdel = 0
+    </select>
+</mapper>

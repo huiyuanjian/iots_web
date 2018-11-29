@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsRegistInfoDao">
+
+    <!--根据服务类型和mac地址查询注册信息-->
+    <select id="queryByTypeAndMac" resultType="io.renren.modules.iots.entity.IotsRegistInfoEntity">
+          select * from iots_regist_info t where t.mac_Address = #{mac} and t.server_Type = #{serverType}
+    </select>
+
+</mapper>

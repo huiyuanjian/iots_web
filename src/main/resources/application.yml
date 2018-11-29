@@ -1,0 +1,196 @@
+# Tomcat
+server:
+    tomcat:
+        uri-encoding: UTF-8
+        max-threads: 1000
+        min-spare-threads: 30
+    ip: localhost
+    port: 8083
+    context-path: /
+    jackson:
+        time-zone: GMT+8
+    # 1:监控系统id, 2:web端系统id, 3:iots端系统id, 4:代理系统id, 5:控制系统id, 6：分发系统id， 7: model模型 系统
+    thisServerId: 2
+    
+#config系统配置
+sysconfig:
+    monitorTimer:
+        delayTime: 1000
+        intervalTime: 60000
+        
+# mysql
+spring:
+    # 环境 dev|test|prod
+    profiles:
+        active: dev
+    http:
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
+            enabled: true
+    redis:
+        database: 0
+        host: 10.10.20.171
+        port: 6379
+        password: 123456     # 密码（默认为空）
+        timeout: 6000  # 连接超时时长（毫秒）
+        pool:
+            max-active: 1000  # 连接池最大连接数（使用负值表示没有限制）
+            max-wait: -1      # 连接池最大阻塞等待时间（使用负值表示没有限制）
+            max-idle: 10      # 连接池中的最大空闲连接
+            min-idle: 5       # 连接池中的最小空闲连接
+    freemarker:
+      suffix: .html
+      request-context-attribute: request
+    jackson:
+        time-zone: GMT+8
+        date-format: yyyy-MM-dd HH:mm:ss
+
+renren:
+    redis:
+        open: false  # 是否开启redis缓存  true开启   false关闭
+    shiro:
+        redis: false # true表示shiro session存到redis里，需要开启redis，才会生效【分布式场景】
+
+#mybatis
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: io.renren.modules.*.entity
+  global-config:
+    #主键类型  0:"数据库ID自增", 1:"用户输入ID",2:"全局唯一ID (数字类型唯一ID)", 3:"全局唯一ID UUID";
+    id-type: 0
+    #字段策略 0:"忽略判断",1:"非 NULL 判断"),2:"非空判断"
+    field-strategy: 2
+    #驼峰下划线转换
+    db-column-underline: true
+    #刷新mapper 调试神器
+    refresh-mapper: true
+    #数据库大写下划线转换
+    #capital-mode: true
+    # Sequence序列接口实现类配置
+    #key-generator: com.baomidou.mybatisplus.incrementer.OracleKeyGenerator
+    #逻辑删除配置
+    logic-delete-value: 1
+    logic-not-delete-value: 0
+    #自定义填充策略接口实现
+    #meta-object-handler: com.baomidou.springboot.xxx
+    #自定义SQL注入器
+    sql-injector: com.baomidou.mybatisplus.mapper.LogicSqlInjector
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+
+#logging
+logging:
+  level: debug
+  path: D:\\IOTS\  #log日志存放地儿
+
+
+#nio Socket 端口配置
+socket:
+  #控制端
+  ctrl:
+    port: 9991
+  #物联网接口 
+  iots:
+    #发送 配置、同步设备变量、获取状态的端口
+    port: 9992
+  #web端
+  web:
+    port: 9993
+  #分发系统  
+  dis:
+    port: 9994
+
+#kafka   
+kafka:
+  #消费者
+  consume:
+    bootstrap.servers: 10.10.20.171:9092
+    group.id: system_info
+    enable.auto.commit: true
+    auto.offset.reset: latest
+    session.timeout.ms: 30000
+    auto.commit.interval.ms: 1000
+    key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  #生产者
+  produce:
+    bootstrap.servers: 10.10.20.171:9092
+    acks: all
+    retries: 0
+    batch.size: 16384
+    linger.ms: 1
+    buffer.memory: 33554432
+    key.serializer: org.apache.kafka.common.serialization.StringSerializer
+    value.serializer: org.apache.kafka.common.serialization.StringSerializer
+  #分发系统信息
+  disServerConfig:
+    group.id: dis_web_data_info
+  #监控系统信息
+  monitorServerConfig:
+    monitor_topic: monitor_topic
+    group.id: monitor_web_data_info
+  #心跳 topic和key  topic多系统一致，key区分系统，和server.thisServerId一致
+  hearbeat:
+    topic: hearbeat_date
+    key: 5
+    group.id: hearbeat_info
+  #设备 状态信息
+  eqm:
+    state:
+      topic: eqm_state_date
+      group.id: eqm_state_info
+
+#l时间调度
+schedules:
+  upload: 0 0/30 * * * ?  #上传日志时间
+  delete:  0 0 0 30 * ?  #删除日志时间
+
+
+#模块的名称
+module:
+  name: IOTS_WEB
+
+#log日志上传 到的redis服务
+redis-two:
+  host: 10.10.20.171
+  port: 6379
+  password: 123456
+  timeout: 1000
+  database: 0
+
+token: token
+login_cookie_max_age: 86400
+login_cookie_domain:
+login_cookie_path: /
+
+# 配置信息
+config_info:
+  # 系统配置文件存放路径（当前项目中的相对路径）
+  path: /config
+  # 配置文件名称
+  file-name: webConfig.txt
+
+# 最近一次上报时间判断周期 毫秒 m
+recently:
+  reported:
+    time:
+      judgment:
+        cycle: 3
+
+
+# mqtt
+mqtt_host: tcp://10.10.170.128:61613
+mqtt_username: admin
+mqtt_password: password
+mqtt_clientid: clientid
+mqtt_timeout: 10
+mqtt_keepalive: 20
+
+# 采集的域名 domain
+acquisition:
+  domain:
+    name:

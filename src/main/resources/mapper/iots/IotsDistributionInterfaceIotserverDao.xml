@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsDistributionInterfaceIotserverDao">
+    <select id="selectByDistributionId" resultType="Long">
+        select iotserver_id from iots_distribution_iotserver where distribution_id = #{id}
+    </select>
+    
+    <delete id="deleteByDistributionId">
+        delete from iots_distribution_iotserver where distribution_id = #{id}
+    </delete>
+    
+    <update id="setStatus">
+        update iots_distribution_interface set state = 0 where id = #{distributionId}
+    </update>
+
+    <!-- 根据分发接口服务的server_id查询其管理的所有物联网接口的kafka主题 -->
+    <select id="selectKafkaTopicById" parameterType="long" resultType="list">
+        select
+          ii.topic
+        from
+          iots_iotserver ii
+          left join
+          iots_distribution_iotserver idio
+          on ii.id = idio.iotserver_id
+          left join
+          iots_distribution_interface idin
+          on idio.distribution_id = idin.id
+        where
+          idin.id = #{id}
+    </select>
+
+    <!-- TODO 批量新增分发接口与物联网接口的关联关系(由于没有网了，所以先写到这吧，准备睡觉) -->
+    <insert id="insertListOfIotserver" >
+        insert into
+          iots_distribution_iotserver
+          (distribution_id,iotserver_id)
+        values
+        <foreach collection="list" item="iotserver_id" index="index" separator=",">
+            (#{distribution_id},#{iotserver_id})
+        </foreach>
+    </insert>
+
+</mapper>

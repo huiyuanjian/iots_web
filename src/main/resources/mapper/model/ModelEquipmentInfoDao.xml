@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.model.dao.ModelEquipmentInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.model.entity.ModelEquipmentInfoEntity" id="modelEquipmentInfoMap">
+        <result property="id" column="id"/>
+        <result property="dyncId" column="dync_id"></result>
+        <result property="name" column="name"/>
+        <result property="pid" column="pid"/>
+        <result property="cycle" column="cycle"/>
+        <result property="remark" column="remark"/>
+        <result property="equipmentType" column="equipment_type"/>
+        <result property="state" column="state"/>
+        <result property="enable" column="enable"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="isdel" column="isdel"/>
+        <result property="field1" column="field1"/>
+        <result property="field2" column="field2"/>
+        <result property="field3" column="field3"/>
+    </resultMap>
+    
+	<!-- 根据 分组 的id ，查询 子eqm 的数据 。传入参数为pid-->
+	<select id="queryEqmForPid" resultMap="modelEquipmentInfoMap">
+		select * from model_equipment_info where pid = #{pid}
+	</select>
+
+    <select id="selectByDyncId" resultType="Long">
+        select * from model_equipment_info t where t.dync_id = #{modelEquipmentId}
+    </select>
+
+    <resultMap id="eqVariablesInfo" type="io.renren.modules.model.entity.ModelEquipmentInfoEntity" extends="modelEquipmentInfoMap">
+        <collection property="list" ofType="io.renren.modules.model.entity.ModelVariableInfoEntity">
+            <result property="id" column="bid" />
+            <result property="name" column="namevr" />
+            <result property="pid" column="pidvr" />
+            <result property="cycle" column="cyclevr" />
+            <result property="remark" column="remarkvr" />
+            <result property="variableStatus" column="variable_statusvr" />
+            <result property="enable" column="enablevr" />
+            <result property="createtime" column="createtimevr" />
+            <result property="updatetime" column="updatetimevr" />
+            <result property="isdel" column="isdelvr" />
+            <result property="dyncId" column="d_id"></result>
+
+        </collection>
+
+    </resultMap>
+
+    <!-- 根据 分组 的id ，c查询 设备 变量信息-->
+    <select id="queryEqmByGid" parameterType="Long" resultMap="eqVariablesInfo">
+        SELECT
+        mei.`id` ,
+        mei.`dync_id` ,
+        mei.`name`,
+        mei.cycle,
+        mei.remark ,
+        mei.equipment_type ,
+        mei.state ,
+        mei.`enable` ,
+        mei.createtime ,
+        mei.updatetime ,
+        mei.isdel ,
+        mvi.`id` bid,
+        mvi.`dync_id` d_id,
+        mvi.`name` namevr ,
+        mvi.cycle  cyclevr,
+        mvi.remark remarkvr ,
+        mvi.variable_status variable_statusvr ,
+        mvi.`enable` enablevr,
+        mvi.createtime createtimevr,
+        mvi.updatetime updatetimevr ,
+        mvi.isdel isdelvr
+        FROM
+        model_equipment_info mei
+        LEFT JOIN model_variable_info mvi ON mei.dync_id = mvi.pid
+        where mei.pid
+        <foreach collection="ids" separator="," open="in (" close=")" item="id">
+            #{id}
+        </foreach>
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            AND  mei.name LIKE #{pattern}
+        </if>
+        AND mei.isdel = 0
+        AND mvi.isdel = 0
+        <!-- limit #{nowPage},#{pageSize}-->
+    </select>
+	
+	<insert id="insertCollector" parameterType="io.renren.modules.model.entity.IoserverCollectorEntity">
+        insert into ioserver_collector (
+            ioserver_id,
+            ioserver_name,
+            model_equip_id,
+            is_del
+        ) values (
+            #{ioserverId},
+            #{ioserverName},
+            #{modelEquipId},
+            #{isDel}
+
+        )
+    </insert>
+    
+    <update id="noBindCollector" parameterType="io.renren.modules.model.entity.IoserverCollectorEntity">
+
+        update ioserver_collector set is_del = 1 where ioserver_id = #{ioserverId} and model_equip_id = #{modelEquipId}
+    </update>
+    
+    <select id="selectCollector" resultType="io.renren.modules.model.entity.IoserverCollectorEntity">
+        select * from ioserver_collector t where t.model_equip_id = #{dyncId} and t.is_del = 0
+    </select>
+
+</mapper>

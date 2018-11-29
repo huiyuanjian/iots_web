@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsCtrlInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.IotsCtrlInfoEntity" id="iotsCtrlInfoMap">
+        <result property="id" column="id"/>
+        <result property="pid" column="pid"/>
+        <result property="name" column="name"/>
+        <result property="ip" column="ip"/>
+        <result property="port" column="port"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="field1" column="field1"/>
+        <result property="field2" column="field2"/>
+        <result property="field3" column="field3"/>
+        <result property="isDel" column="is_del"></result>
+        <result property="remark" column="remark"></result>
+    </resultMap>
+
+    <!--新增 -->
+    <insert id="newCtrlInfo" parameterType="java.util.Map" >
+        INSERT INTO iots_ctrl_info (name,ip,field1,remark,is_del) VALUE(#{name},#{ip},#{field1},#{remark},#{isDel})
+    </insert>
+
+    <!--修改控制接口管理 -->
+    <update id="updateInfo" parameterType="java.util.Map">
+      UPDATE iots_ctrl_info SET
+        <if test="name!=null and name!=''">
+          name = #{name},
+        </if>
+        <if test="remark!=null and remark!=''">
+          remark =#{remark},
+        </if>
+        <if test="id!=null and id!=''">
+            id= #{id}
+        </if>
+        where id=#{id}
+    </update>
+
+    <!-- 查询-->
+    <select id="getCtrlInfoById" parameterType="string" resultMap="iotsCtrlInfoMap">
+        select id , `name`, ip, field1, remark from iots_ctrl_info where id= #{id}
+    </select>
+
+</mapper>

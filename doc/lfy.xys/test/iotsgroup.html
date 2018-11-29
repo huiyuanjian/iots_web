@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IOServer 分组表</title>
+		<#include "/header.html">
+</head>
+<body>
+<div id="rrapp" v-cloak>
+    <div v-show="showList">
+        <div class="grid-btn">
+			<#if shiro.hasPermission("iots:iotsgroup:save")>
+            <a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+			</#if>
+			<#if shiro.hasPermission("iots:iotsgroup:update")>
+            <a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+			</#if>
+			<#if shiro.hasPermission("iots:iotsgroup:delete")>
+            <a class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+			</#if>
+        </div>
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+
+    <div v-show="!showList" class="panel panel-default">
+        <div class="panel-heading">{{title}}</div>
+        <form class="form-horizontal">
+														                    <div class="form-group">
+                        <div class="col-sm-2 control-label">分组名字</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.name" placeholder="分组名字"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">说明</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.remark" placeholder="说明"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">父节点id（当值为-1时，表示没有父节点，即最高级别）</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.parentid" placeholder="父节点id（当值为-1时，表示没有父节点，即最高级别）"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">创建者ID</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.creator" placeholder="创建者ID"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">创建时间</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.createtime" placeholder="创建时间"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">更新者ID</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.updator" placeholder="更新者ID"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">更新时间</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.updatetime" placeholder="更新时间"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">是否启用（0 表示未启用  1 表示已启用 ）</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.enable" placeholder="是否启用（0 表示未启用  1 表示已启用 ）"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">预留字段1</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.field1" placeholder="预留字段1"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">预留字段2</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.field2" placeholder="预留字段2"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">预留字段3</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="iotsGroup.field3" placeholder="预留字段3"/>
+                        </div>
+                    </div>
+							            <div class="form-group">
+                <div class="col-sm-2 control-label"></div>
+                <input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+                &nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="${request.contextPath}/statics/js/modules/iots/iotsgroup.js?_${.now?long}"></script>
+</body>
+</html>

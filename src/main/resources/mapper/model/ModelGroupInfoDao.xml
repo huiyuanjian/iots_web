@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.model.dao.ModelGroupInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.model.entity.ModelGroupInfoEntity" id="modelGroupInfoMap">
+        <result property="id" column="id"/>
+        <result property="dyncId" column="dync_id"></result>
+        <result property="name" column="name"/>
+        <result property="topic" column="topic"/>
+        <result property="ip" column="ip"/>
+        <result property="port" column="port"/>
+        <result property="state" column="state"/>
+        <result property="isLeaf" column="isLeaf"/>
+        <result property="remark" column="remark"/>
+        <result property="pid" column="pid"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="enable" column="enable"/>
+    </resultMap>
+
+	<!-- 查询id 是不是子分组。 -->
+	<select id="queryVarForPid" resultMap="modelGroupInfoMap">
+		select * from
+		model_variable_info where pid = #{pid}
+	</select>
+
+    <select id="selectByDyncId" resultType="Long">
+        select id from model_group_info where dync_id = #{modelGroupId}
+    </select>
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.model.entity.ModelGroupInfoEntity" id="queryTreeMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="state" column="state"/>
+        <result property="isleaf" column="isLeaf"/>
+        <result property="pid" column="pid"/>
+        <result property="enable" column="enable"/>
+        <result property="dyncId" column="dync_id"></result>
+    </resultMap>
+
+    <select id="queryTree" parameterType="java.util.Map" resultMap="queryTreeMap">
+        SELECT id, name, state, isLeaf, pid, enable,dync_id FROM model_group_info WHERE enable = 1 and is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            AND  name LIKE #{pattern}
+        </if>
+
+    </select>
+
+    <!-- 根据组id查询子组所针对的 设备id-->
+    <select id="getEqIdsByGroup" parameterType="Long" resultType="Long">
+         SELECT
+            mgi1.dync_id
+        FROM
+            model_group_info mgi1,
+            model_group_info mgi2
+        WHERE
+            mgi1.pid = mgi2.dync_id
+        AND mgi2.dync_id = #{dyncId}
+        AND mgi1.is_del = 0
+        AND mgi2.is_del = 0
+    </select>
+</mapper>

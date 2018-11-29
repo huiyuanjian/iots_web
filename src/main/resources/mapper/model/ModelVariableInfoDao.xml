@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="io.renren.modules.model.dao.ModelVariableInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap
+		type="io.renren.modules.model.entity.ModelVariableInfoEntity"
+		id="modelVariableInfoMap">
+		<result property="id" column="id" />
+		<result property="dyncId" column="dync_id"></result>
+		<result property="name" column="name" />
+		<result property="pid" column="pid" />
+		<result property="cycle" column="cycle" />
+		<result property="remark" column="remark" />
+		<result property="variableStatus" column="variable_status" />
+		<result property="enable" column="enable" />
+		<result property="creator" column="creator" />
+		<result property="createtime" column="createtime" />
+		<result property="updator" column="updator" />
+		<result property="updatetime" column="updatetime" />
+		<result property="isdel" column="isdel" />
+		<result property="field1" column="field1" />
+		<result property="field2" column="field2" />
+		<result property="field3" column="field3" />
+	</resultMap>
+
+	<!-- 批量插入，使用原生方法，否则 id 是空 -->
+	<insert id="add" parameterType="ModelVariableInfoEntity">
+		INSERT INTO
+		model_variable_info(id,name,pid,cycle,remark,variable_status,
+		enable,creator,createtime,
+		updator,updatetime,isdel,field1,field2,field3)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(
+				#{item.id}, #{item.name}, #{item.pid},
+				#{item.cycle}, #{item.remark}, #{item.variableStatus},
+				#{item.enable}, #{item.creator}, #{item.createtime},
+				#{item.updator}, #{item.updatetime}, #{item.isdel},
+				#{item.field1}, #{item.field2}, #{item.field3}
+			)
+		</foreach>
+	</insert>
+
+	<select id="queryByIdsMap" resultMap="modelVariableInfoMap">
+		select * from model_variable_info
+		where pid in
+		<foreach item="item" index="index" collection="array" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<delete id="deleteAllData">
+		delete from model_variable_info
+	</delete>
+
+	<!-- 根据 设备的id ，查询 子var变量 的数据 。传入参数为pid -->
+	<select id="queryVarForPid" resultMap="modelVariableInfoMap">
+		select * from
+		model_variable_info where pid = #{pid}
+	</select>
+
+	<!-- 根据 设备的id，查询 所有有 绑定关联的 变量 -->
+	<select id="queryModelBindVar" resultMap="modelVariableInfoMap">
+		select info.* from  model_variable_info info
+		right join model_bind_relation relation 
+		on info.id = relation.model_id 
+		where pid = #{pid}
+	</select>
+	
+	<select id="selectByDyncId" resultType="Long" >
+		select id from model_variable_info where dync_id = #{modelVariableId}
+	</select>
+</mapper>

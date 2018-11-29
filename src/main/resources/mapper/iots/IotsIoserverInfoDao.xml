@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsIoserverInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.IotsIoserverInfoEntity" id="iotsIoserverInfoMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="pid" column="pid"/>
+        <result property="cycle" column="cycle"/>
+        <result property="remark" column="remark"/>
+        <result property="ioserverType" column="ioserver_type"/>
+        <result property="ip" column="ip"/>
+        <result property="port" column="port"/>
+        <result property="state" column="state"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="enable" column="enable"/>
+        <result property="field1" column="field1"/>
+        <result property="field2" column="field2"/>
+        <result property="field3" column="field3"/>
+        <result property="iotServerName" column="iot_server_name"></result>
+        <result property="isDel" column="is_del"></result>
+    </resultMap>
+
+	<!-- 根据 分组的id ，查询 子IOServer 的数据 。传入参数为pids-->
+	<select id="queryIOServerForPid" resultMap="iotsIoserverInfoMap">
+		select * from iots_ioserver_info where pid = #{pid} and is_del = 0
+	</select>
+
+	<!-- 根据 变量的id ，查询 IOServer 的数据 。传入参数为 变量的ids-->
+	<select id="queryIOServerForVarId" resultMap="iotsIoserverInfoMap">
+		select ios.* from iots_ioserver_info ios
+		where ios.id in
+		(
+			select eqm.pid eqmPid from iots_variable_info var 
+			left join iots_equipment_info eqm 
+			on  var.pid = eqm.id 
+			where var.id in 
+			<foreach item="item" index="index" collection="array" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		)
+	</select>
+    
+    <select id="roleIotServerInfo" resultMap="iotsIoserverInfoMap">
+        <if test="roleId != null">
+            select * from (
+            select t.* from sys_role r
+            left join sys_role_ioserverInfo i on r.role_id = i.role_id
+            left join iots_ioserver_info t on i.ioserver_info_id = t.id
+            where r.role_id = #{roleId}
+            ) t
+        </if>
+        <if test="roleId == null">
+            select * from iots_ioserver_info t limit #{page},#{limit}
+        </if>
+
+    </select>
+
+    <select id="roleIotServerInfoCount" resultType="Integer">
+        <if test="roleId != null">
+            select count(t.id) from sys_role r
+            left join sys_role_ioserverInfo i on r.role_id = i.role_id
+            left join iots_ioserver_info t on i.ioserver_info_id = t.id
+            where r.role_id = #{roleId}
+        </if>
+        <if test="roleId == null">
+            select count(1) from iots_ioserver_info t
+        </if>
+
+    </select>
+
+    <select id="roleIotServerInfoList" resultMap="iotsIoserverInfoMap">
+        <if test="roleId != null and roleId != 1">
+            select * from (
+            select t.* from sys_role r
+            left join sys_role_ioserverInfo_scope i on r.role_id = i.role_id
+            left join iots_ioserver_info t on i.role_ioserverInfo_id_scope = t.id
+            where r.role_id = #{roleId} limit #{page},#{limit}
+            ) t
+        </if>
+        <if test="roleId == null or roleId == 1">
+            select * from iots_ioserver_info t limit #{page},#{limit}
+        </if>
+
+    </select>
+
+    <select id="roleIotServerInfoListCount" resultType="Integer">
+        <if test="roleId != null and roleId != 1">
+            select count(t.id) from sys_role r
+            left join sys_role_ioserverInfo_scope i on r.role_id = i.role_id
+            left join iots_ioserver_info t on i.role_ioserverInfo_id_scope = t.id
+            where r.role_id = #{roleId}
+        </if>
+        <if test="roleId == null or roleId == 1">
+            select count(1) from iots_ioserver_info t
+        </if>
+
+    </select>
+
+    <select id="selectByParam" resultMap="iotsIoserverInfoMap">
+        select * from iots_ioserver_info
+        <where>
+            <if test="name != null and name != ''">
+                <bind name="pattern" value="'%' + name + '%'"/>
+                name like #{pattern}
+            </if>
+            <if test="pid != null">
+                and pid = #{pid}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="selectByPids" resultMap="iotsIoserverInfoMap">
+        select * from iots_ioserver_info
+        <where>
+            <if test="name != null and name != ''">
+                <bind name="pattern" value="'%' + name + '%'"/>
+                name like #{pattern}
+            </if>
+            and pid not in
+            <foreach item="ioserverInfoPid" index="index" collection="pids" open="("
+                     separator="," close=")">
+                #{ioserverInfoPid}
+            </foreach>
+        </where>
+
+    </select>
+    
+    <select id="selectAll" resultMap="iotsIoserverInfoMap">
+        select * from iots_ioserver_info
+        where is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+          and name like #{pattern}
+        </if>
+    </select>
+    <select id="selectByIds" resultMap="iotsIoserverInfoMap">
+        select * from iots_ioserver_info where id in
+        <foreach item="ioserverInfoId" index="index" collection="ids" open="("
+                 separator="," close=")">
+            #{ioserverInfoId}
+        </foreach>
+    </select>
+    
+    <resultMap id="selectAllByNameMap" type="io.renren.modules.iots.entity.IotsIotserverEntity">
+        <result column="parentId" property="id"></result>
+        <result column="parentName" property="name"></result>
+        <collection property="list" ofType="io.renren.modules.iots.entity.IotsIoserverInfoEntity">
+            <result column="chileId" property="id"></result>
+            <result column="chileName" property="name"></result>
+        </collection>
+    </resultMap>
+    
+    <select id="selectAllByName" resultMap="selectAllByNameMap">
+        <bind name="pattern" value="'%' + name + '%'"/>
+        select  io.id as parentId, io.name as parentName,t.id as chileId, t.name as chileName from iots_ioserver_info t
+		left join iots_iotserver io on t.pid = io.id
+		where t.is_del = 0 and io.is_del = 0 and t.`name` like #{pattern} and io.`name` like #{pattern};
+    </select>
+
+    <select id="selectioserverInfoByName" resultMap="selectAllByNameMap">
+        <bind name="pattern" value="'%' + name + '%'"/>
+        select  io.id as parentId, io.name as parentName,t.id as chileId, t.name as chileName from iots_ioserver_info t
+        left join iots_iotserver io on t.pid = io.id
+        where t.is_del = 0 and io.is_del = 0  and t.`name` like #{pattern};
+    </select>
+    
+    <select id="selectMacByIoserverId" resultType="String" >
+          select t.ip from iots_iotserver t where t.id = #{pid} and t.is_del = 0
+    </select>
+    <select id="selectAllMac" resultType="String" >
+        select ip from iots_ioserver_info where pid = #{pid} and is_del = 0
+    </select>
+
+    <select id="selectPid" resultType="Long">
+        select pid from iots_ioserver_info where id = #{id}
+    </select>
+    <select id="selectOther" resultType="String">
+        select ip from iots_ioserver_info where id <![CDATA[ <>  ]]> #{id} and pid = #{pid} and is_del = 0
+    </select>
+
+    <select id="queryMacById" parameterType="string" resultType="string">
+        SELECT
+            iii.ip
+        FROM
+            iots_iotserver iis,
+            iots_ioserver_info iii
+        WHERE
+            iis.id = iii.pid
+        AND iis.id =#{id}
+
+    </select>
+
+    <select id="selectMacByName" resultType="io.renren.modules.iots.entity.IotsIoserverInfoEntity">
+        select * from iots_ioserver_info t where t.is_del = 0 and t.name = #{name}
+    </select>
+
+    <select id="selectMacByPid" resultType="String">
+        select ip from iots_ioserver_info t where  t.id = #{id} and t.is_del = 1
+    </select>
+
+    <select id="queryCollectByCondi" parameterType="java.util.Map" resultMap="iotsIoserverInfoMap">
+        SELECT
+            ios.id,
+            ios.`name`,
+            ios.updatetime,
+            ios.cycle,
+            ios.topic,
+            ios.remark,
+            ios.state,
+            ios.ip,
+            su.real_name field1
+        FROM
+            iots_iotserver ios
+        LEFT JOIN sys_user su ON ios.updator = su.user_id
+        WHERE 1=1 and ios.is_del=0
+        <if test="name!=null and name!=''">
+            AND ios.`name` =#{name}
+        </if>
+        <if test="ip!=null and ip!=''">
+            AND ios.ip =#{ip}
+        </if>
+        <if test="port!=null and port!=''">
+            AND ios.`port` =#{port}
+        </if>
+        <if test="state!=null and state!=''">
+            AND ios.state =#{state}
+        </if>
+        limit #{page},#{limit}
+    </select>
+
+    <select id="queryCollectByCondiTotal" parameterType="java.util.Map" resultType="Integer">
+        SELECT
+          count(*) total
+        FROM
+        iots_iotserver ios
+        LEFT JOIN sys_user su ON ios.updator = su.user_id
+        WHERE 1=1 and ios.is_del=0
+        <if test="name!=null and name!=''">
+            AND ios.`name` =#{name}
+        </if>
+        <if test="ip!=null and ip!=''">
+            AND ios.ip =#{ip}
+        </if>
+        <if test="port!=null and port!=''">
+            AND ios.`port` =#{port}
+        </if>
+        <if test="state!=null and state!=''">
+            AND ios.state =#{state}
+        </if>
+    </select>
+
+    <update id="updateInfoyId" parameterType="io.renren.modules.iots.entity.IotsIoserverInfoEntity" >
+        UPDATE  iots_iotserver SET
+        <if test="ip!=null">
+            ip=#{ip},
+        </if>
+        <if test="state!=null">
+            `state`=#{state},
+        </if>
+        <if test="remark!=null and remark!=''">
+            remark=#{remark},
+        </if>
+        <if test="name!=null and name!=''">
+            `name`=#{name},
+        </if>
+        <if test="updator!=null">
+            updator=#{updator},
+        </if>
+        <if test="id!=null">
+            id=#{id}
+        </if>
+        <where>
+            <if test="id!=null">
+                id=#{id}
+            </if>
+        </where>
+    </update>
+    
+    <select id="selectAllCtrl" resultType="io.renren.modules.iots.entity.IotsCtrlInfoEntity">
+        select c.* from ctrl_iots_relation t
+				left join iots_ctrl_info c on t.ctrl_id = c.id
+	  where t.iotserver_id = #{pid} and c.is_del = 0
+    </select>
+
+</mapper>

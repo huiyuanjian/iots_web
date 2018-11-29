@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.model.dao.ModelBindRelationDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.model.entity.ModelBindRelationEntity" id="modelBindRelationMap">
+        <result property="id" column="id"/>
+        <result property="webId" column="web_id"/>
+        <result property="modelId" column="model_id"/>
+        <result property="isflag" column="isFlag"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+    </resultMap>
+
+
+	<!-- 根据 model分组的id，查询 所有有 绑定 的关系 -->
+	<select id="queryBindRelation" resultMap="modelBindRelationMap">
+		select relation.* from  model_variable_info  info
+		right join model_bind_relation relation
+		on info.id = relation.model_id
+		where pid = #{pid}
+	</select>
+
+    <update id="deleteByDyncId">
+        update model_bind_relation set isflag = 1 where model_id = #{id} and web_id = #{webId}
+    </update>
+
+    <select id="selectByModelId" resultType="Long">
+        select id from model_bind_relation where isFlag = 0 and model_id = #{modelId}
+    </select>
+
+    <select id="selectByDyncId" resultMap="modelBindRelationMap">
+         SELECT t.* FROM   model_bind_relation t
+		    left join iots_variable_info i on t.web_id = i.id
+	      where t.model_id = #{dyncId} and isFlag = 0 and i.isdel = 0
+    </select>
+
+    <select id="selectIoserverByVarid" resultType="io.renren.modules.iots.entity.IotsIoserverInfoEntity">
+        SELECT DISTINCT i.id,i.name,i.ip,i.pid FROM iots_variable_info t
+		left join iots_equipment_info e on e.id = t.pid
+		left join iots_ioserver_info i on i.id = e.pid
+		where t.isdel = 0 and e.isdel = 0 and i.is_del = 0 and t.id = #{varId}
+    </select>
+
+    <select id="selectMacByIoserverInfoId" resultType="String">
+        select ip from iots_iotserver where is_del = 0 and id = #{pid}
+    </select>
+
+    <select id="selectEquiByDyncId" resultType="io.renren.modules.model.entity.ModelEquipmentInfoEntity">
+        select m.* from iots_variable_info t left join iots_equipment_info m on t.pid = m.dync_id where t.isdel = 0 and m.isdel = 0 and t.dync_id = #{dyncId}
+    </select>
+    <select id="selectVarByDyncId" resultType="io.renren.modules.iots.entity.IotsVariableInfoEntity">
+        select * from iots_variable_info t where t.dync_id = #{dyncId} and t.isdel = 0
+    </select>
+
+    <select id="selectModelEquByDyncId" resultType="io.renren.modules.model.entity.ModelEquipmentInfoEntity">
+          select m.* from model_variable_info t left join model_equipment_info m on t.pid = m.dync_id where t.isdel = 0 and m.isdel = 0 and t.dync_id = #{dyncId}
+    </select>
+
+    <select id="selectModelVarByDyncId" resultType="io.renren.modules.model.entity.ModelVariableInfoEntity">
+          select * from model_variable_info t where t.dync_id = #{dyncId} and t.isdel = 0
+    </select>
+
+    <select id="selectPNamesByChildId" resultType="io.renren.modules.iots.entity.monitor.ChildAndParent">
+        select t.pid as id, t.name from model_group_info t where t.dync_id = #{id} and t.is_del = 0
+    </select>
+
+    <select id="selectAllEqui" resultType="io.renren.modules.model.entity.ModelEquipmentInfoEntity">
+            select m.* from ioserver_collector t
+                left join model_equipment_info m on t.model_equip_id = m.dync_id
+                where t.is_del = 0 and m.isdel = 0 and t.ioserver_id = #{id}
+    </select>
+
+    <select id="selectAllVarByEquiId" resultType="io.renren.modules.model.entity.ModelVariableInfoEntity">
+        select * from model_variable_info t where t.pid = #{dyncId} and t.isdel = 0
+    </select>
+
+    <select id="selectAllBindVarIds" resultType="Long">
+            select r.web_id from model_equipment_info t
+            left join model_variable_info m on t.dync_id = m.pid
+            left join model_bind_relation r on r.model_id = m.dync_id
+            where m.isdel = 0 and t.isdel = 0 and r.isFlag = 0 and t.dync_id = #{dyncId}
+            <if test="disableId != null">
+                and r.model_id != #{disableId}
+            </if>
+    </select>
+
+</mapper>

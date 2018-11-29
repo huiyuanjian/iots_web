@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.LoggerDao">
+
+    <resultMap id="serverInfo" type="io.renren.modules.iots.entity.log.ServerInfo">
+        <result column="name" property="serverName"/>
+        <result column="id" property="serverId"/>
+        <result column="ip" property="mac"/>
+    </resultMap>
+
+    <!-- 查询物联网接口的 -->
+    <select id="selectCollect" resultMap="serverInfo">
+          select t.id, t.`name`,t.ip from iots_iotserver t
+          where t.is_del = 0
+          <if test="name != null and name != ''">
+              <bind name="pattern" value="'%' + name + '%'"/>
+              and t.name like #{pattern}
+          </if>
+    </select>
+
+    <!-- 查询采集代理的 -->
+    <select id="selectProxy" resultMap="serverInfo">
+        select t.id, t.`name`,t.ip from iots_ioserver_info t
+        where t.is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            and t.name like #{pattern}
+        </if>
+    </select>
+
+    <!-- 查询控制的 -->
+    <select id="selectControl" resultMap="serverInfo">
+        select t.id, t.name,t.ip from iots_ctrl_info t
+        where t.is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            and t.name like #{pattern}
+        </if>
+    </select>
+
+    <!-- 查询分发的 -->
+    <select id="selectDistribute" resultMap="serverInfo">
+        select t.id, t.`name`,t.ip from iots_distribution_interface t
+        where t.is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            and t.name like #{pattern}
+        </if>
+    </select>
+
+    <!-- 批量插入 -->
+    <insert id="saveList">
+        insert into iots_log (
+            file_name,
+            day_string,
+            server_type,
+            server_mac,
+            `index`,
+            create_time,
+            upload_url,
+            is_del
+        ) values
+        <foreach collection="logEntities" item="logEntity" index="index" separator=",">
+            (
+            #{logEntity.file_name},
+            #{logEntity.day_string},
+            #{logEntity.server_type},
+            #{logEntity.server_mac},
+            #{logEntity.index},
+            now(),
+            #{logEntity.upload_url},
+            0
+            )
+        </foreach>
+    </insert>
+    
+    <resultMap id="resultDataMap" type="io.renren.modules.iots.entity.log.LoggerResult">
+        <result column="groupingTime" property="groupingTime"/>
+        <collection property="list" ofType="io.renren.modules.iots.entity.LogEntity">
+            <result column="id" property="id"/>
+            <result column="file_name" property="file_name"/>
+            <result column="day_string" property="day_string"/>
+            <result column="server_type" property="server_type"/>
+            <result column="server_mac" property="server_mac"/>
+            <result column="index" property="index"/>
+            <result column="create_time" property="create_time"/>
+            <result column="is_del" property="isdel"/>
+        </collection>
+    </resultMap>
+
+    <!-- 根据服务类型和mac地址查询日志信息 -->
+    <select id="selectLoggerByServerNameAndMac" resultMap="resultDataMap">
+          select a.day_string as groupingTime ,b.* from
+            (select t.* from iots_log t where t.is_del = 0 and t.server_type = #{serverType}
+                  <if test="mac != null and mac != ''">
+                      and t.server_mac = #{mac}
+                  </if>
+                  <if test="searchTime != null and searchTime != ''">
+                      and t.day_string = #{searchTime}
+                  </if>
+            ) a,
+            (select t.* from iots_log t where t.is_del = 0 and t.server_type = #{serverType}
+                <if test="mac != null and mac != ''">
+                    and t.server_mac = #{mac}
+                </if>
+                <if test="searchTime != null and searchTime != ''">
+                    and t.day_string = #{searchTime}
+                </if>
+            ) b
+            where a.day_string = b.day_string ORDER BY str_to_date(a.day_string, '%Y-%m-%d') DESC, b.index ASC;
+    </select>
+</mapper>

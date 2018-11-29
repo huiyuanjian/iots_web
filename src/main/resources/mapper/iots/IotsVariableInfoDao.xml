@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="io.renren.modules.iots.dao.IotsVariableInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap
+		type="io.renren.modules.iots.entity.IotsVariableInfoEntity"
+		id="iotsVariableInfoMap">
+		<result property="id" column="id" />
+		<result property="dyncId" column="dync_id"></result>
+		<result property="name" column="name" />
+		<result property="pid" column="pid" />
+		<result property="cycle" column="cycle" />
+		<result property="remark" column="remark" />
+		<result property="variableStatus" column="variable_status" />
+		<result property="enable" column="enable" />
+		<result property="creator" column="creator" />
+		<result property="createtime" column="createtime" />
+		<result property="updator" column="updator" />
+		<result property="updatetime" column="updatetime" />
+		<result property="isdel" column="isdel" />
+		<result property="field1" column="field1" />
+		<result property="field2" column="field2" />
+		<result property="field3" column="field3" />
+	</resultMap>
+
+	<!-- 根据 设备的id ，查询 子var变量 的数据 。传入参数为pid -->
+	<select id="queryVarForPid" resultMap="iotsVariableInfoMap">
+		select * from
+		iots_variable_info where pid = #{pid}
+	</select>
+	    
+    <!-- 查询 指定设备的 变量的 集合。 -->
+	<select id="queryByPidsMap" resultMap="iotsVariableInfoMap">
+		select * from iots_variable_info 
+		where pid in
+		<foreach item="item" index="index" collection="array" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	    
+	<!-- 查询 指定变量的 集合 -->
+	<select id="queryByIdsMap" resultMap="iotsVariableInfoMap">
+		select * from iots_variable_info 
+		where id in
+		<foreach item="item" index="index" collection="array" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<select id="selectByDyncId" resultMap="iotsVariableInfoMap">
+		select t.* from iots_variable_info t
+			left join iots_equipment_info i on t.pid = i.id
+			left join iots_ioserver_info o on o.id = i.pid
+ 				where t.dync_id = #{varId} and i.isdel = 0 and o.is_del = 0 and t.`name` = #{varName} and i.`name` = #{equiName} and o.id=#{id}
+	</select>
+	
+	<select id="selectByEquiNameAndIoserverId" resultType="Long">
+		select i.id from iots_ioserver_info t
+		left join iots_equipment_info i on t.id = i.pid
+		where t.id = #{id} and t.is_del = 0 and i.`name` = #{deviceName} and i.isdel = 0;
+	</select>
+	
+	<select id="selectVarByIoserverId" resultType="io.renren.modules.iots.entity.IotsVariableInfoEntity">
+		select v.* from iots_equipment_info t
+				left join iots_variable_info v on t.id = v.pid
+		where t.pid = #{serverId}
+	</select>
+	
+</mapper>

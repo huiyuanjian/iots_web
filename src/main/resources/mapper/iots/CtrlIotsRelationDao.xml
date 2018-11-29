@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.CtrlIotsRelationDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.CtrlIotsRelationEntity" id="ctrlIotsRelationMap">
+        <result property="id" column="id"/>
+        <result property="ctrlId" column="ctrl_id"/>
+        <result property="iotserverId" column="iotserver_id"/>
+    </resultMap>
+
+    <select id="selectByPid" resultType="Long">
+        select iotserver_id from ctrl_iots_relation where ctrl_id = #{id}
+    </select>
+
+    <delete id="deleteByCtrlId">
+        delete from ctrl_iots_relation where ctrl_id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsIotserverDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.IotsIotserverEntity" id="iotsIotserverMap">
+        <result property="id" column="id"/>
+        <result property="cycle" column="cycle"></result>
+        <result property="name" column="name"/>
+        <result property="topic" column="topic"/>
+        <result property="remark" column="remark"/>
+        <result property="state" column="state"/>
+        <result property="ip" column="ip"/>
+        <result property="port" column="port"/>
+        <result property="pid" column="pid"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="enable" column="enable"/>
+        <result property="field1" column="field1"/>
+        <result property="field2" column="field2"/>
+        <result property="field3" column="field3"/>
+        <result property="isDel" column="is_del"></result>
+    </resultMap>
+
+    <select id="selectAll" resultMap="iotsIotserverMap">
+        select * from iots_iotserver
+        where is_del = 0
+        <if test="name != null and name != ''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            and name like #{pattern}
+        </if>
+    </select>
+    
+    <select id="selectByMac" resultType="String">
+        select mac_addr from mac_connection where mac_addr = #{mac}
+    </select>
+    
+    <insert id="insertMac">
+        insert into mac_connection(mac_addr) values (#{macAddr})
+    </insert>
+    
+    <select id="selectMacsById" resultType="String">
+        select t.ip from iots_ioserver_info t where t.pid = #{pid} and t.is_del = 0
+    </select>
+    
+    <select id="selectAllIoserver" resultType="io.renren.modules.iots.entity.IotsIoserverInfoEntity">
+          select * from iots_ioserver_info where pid = #{id} and is_del = 0
+    </select>
+
+    <select id="getCollectById" parameterType="Long" resultMap="iotsIotserverMap">
+          select * from iots_iotserver ii where ii.id = #{id} and is_del = 0
+    </select>
+    
+    <update id="setStatus">
+        update iots_iotserver set state = #{status} where ip = #{mac} and name = #{serverName}
+    </update>
+</mapper>

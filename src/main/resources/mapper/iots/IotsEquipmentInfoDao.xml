@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.renren.modules.iots.dao.IotsEquipmentInfoDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.IotsEquipmentInfoEntity" id="iotsEquipmentInfoMap">
+        <result property="id" column="id"/>
+        <result property="dyncId" column="dync_id"></result>
+        <result property="name" column="name"/>
+        <result property="pid" column="pid"/>
+        <result property="cycle" column="cycle"/>
+        <result property="remark" column="remark"/>
+        <result property="equipmentType" column="equipment_type"/>
+        <result property="enable" column="enable"/>
+        <result property="state" column="state"/>
+        <result property="creator" column="creator"/>
+        <result property="createtime" column="createtime"/>
+        <result property="updator" column="updator"/>
+        <result property="updatetime" column="updatetime"/>
+        <result property="isdel" column="isdel"/>
+        <result property="field1" column="field1"/>
+        <result property="field2" column="field2"/>
+        <result property="field3" column="field3"/>
+    </resultMap>
+    
+    <resultMap id="iotsvarableInfoMap" extends="iotsEquipmentInfoMap" type="io.renren.modules.iots.entity.IotsEquipmentInfoEntity">
+        <collection property="list" ofType="io.renren.modules.iots.entity.IotsVariableInfoEntity">
+            <result property="id" column="vid" />
+            <result property="name" column="vname" />
+            <result property="pid" column="vpid" />
+            <result property="cycle" column="vcycle" />
+            <result property="remark" column="vremark" />
+            <result property="variableStatus" column="vvariable_status" />
+            <result property="enable" column="venable" />
+            <result property="creator" column="vcreator" />
+            <result property="createtime" column="vcreatetime" />
+            <result property="updator" column="vupdator" />
+            <result property="updatetime" column="vupdatetime" />
+            <result property="isdel" column="visdel" />
+            <result property="field1" column="vfield1" />
+            <result property="field2" column="vfield2" />
+            <result property="field3" column="vfield3" />
+        </collection>
+    </resultMap>
+
+	<!-- 根据 IOServer的id ，查询 子eqm 的数据 。传入参数为pid-->
+	<select id="queryEqmForPid" resultMap="iotsvarableInfoMap">
+		select
+            equipment.* ,
+            variable.id vid,
+            variable.`name` vname,
+            variable.pid vpid,
+            variable.cycle vcycle,
+            variable.remark vremark,
+            variable.variable_status vvariable_status,
+            variable.`enable` venable,
+            variable.creator vcreator,
+            variable.createtime vcreatetime,
+            variable.updator vupdator,
+            variable.updatetime vupdatetime,
+            variable.isdel visdel
+        from iots_equipment_info equipment, iots_variable_info variable
+        where equipment.id = variable.pid
+        and equipment.pid in
+        <foreach collection="ids" separator="," open="(" close=")" item="eid">
+            #{eid}
+        </foreach>
+        <if test="name != null and name !=''">
+            <bind name="pattern" value="'%' + name + '%'"/>
+            and equipment.name like #{pattern}
+        </if>
+	</select>
+	
+	
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.renren.modules.iots.entity.EqmStateEntity" id="eqmStateEntityMap">
+        <result property="id" column="id"/>
+        <result property="state" column="state"/>
+        <result property="updatetime" column="updatetime"/>
+    </resultMap>
+	
+	<!-- 查询指定字段 -->
+	<select id="queryEqmStateMap" resultMap="eqmStateEntityMap">
+		select id, state, updatetime from iots_equipment_info 
+	</select>
+
+    <select id="selectByDyncId" resultMap="iotsEquipmentInfoMap">
+        select * from iots_equipment_info t where t.pid = #{id} and t.name = #{name}
+    </select>
+
+    <update id="deleteByIoserverId">
+        update iots_equipment_info t set t.isdel = 1 where t.pid = #{serverId}
+    </update>
+</mapper>
